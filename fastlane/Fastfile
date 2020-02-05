@@ -1,0 +1,69 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Run Charles With UI"
+  lane :startCharlesWithUI do
+    Thread.new { 
+      stopCharles
+      replaceCharlesConfigFilePaths
+      sh "/Applications/Charles.app/Contents/MacOS/Charles -config #{Pathname.new(Dir.pwd)}/Mocks/configs/default.charles.config"
+    }
+  end
+
+  desc "Run Charles Without UI"
+  lane :startCharlesWithoutUI do
+    Thread.new { 
+      stopCharles
+      replaceCharlesConfigFilePaths
+      sh "/Applications/Charles.app/Contents/MacOS/Charles -headless -config #{Pathname.new(Dir.pwd)}/Mocks/configs/default.charles.config"
+    }
+  end
+
+  private_lane :replaceCharlesConfigFilePaths do
+    json_path = "#{Pathname.new(Dir.pwd)}/Mocks/jsons"
+    config_path = "#{Pathname.new(Dir.pwd)}/Mocks/configs/default.charles.config"
+    registration_name = sh "echo $CHARLES_REGISTRATION_NAME"
+    registration_key = sh "echo $CHARLES_REGISTRATION_KEY"
+
+    path_to_file = config_path
+    json_var_string = "(JSON_PATH)"
+    current_jsons_path = json_path
+    find_replace_string(
+      path_to_file: path_to_file,
+      old_string: json_var_string,
+      new_string: current_jsons_path) 
+
+    registration_name_var_string = "(CHARLES_REGISTRATION_NAME)"
+      find_replace_string(
+        path_to_file: path_to_file,
+        old_string: registration_name_var_string,
+        new_string: registration_name.strip) 
+    
+    registration_key_var_string = "(CHARLES_REGISTRATION_KEY)"
+      find_replace_string(
+        path_to_file: path_to_file,
+        old_string: registration_key_var_string,
+        new_string: registration_key.strip) 
+  end
+
+  lane :stopCharles do
+    Thread.new { 
+      sh 'killall Charles'
+    }
+  end
+end
