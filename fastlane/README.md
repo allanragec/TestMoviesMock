@@ -26,16 +26,16 @@ Run Charles With UI
 fastlane ios startCharlesWithoutUI
 ```
 Run Charles Without UI
-### ios pname
-```
-fastlane ios pname
-```
-
 ### ios stopCharles
 ```
 fastlane ios stopCharles
 ```
 
+### ios uitests
+```
+fastlane ios uitests
+```
+Runs all UI tests
 
 ----
 

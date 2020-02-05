@@ -66,4 +66,18 @@ platform :ios do
       sh 'killall Charles'
     }
   end
+
+  desc "Runs all UI tests"
+  lane :uitests do
+    startCharlesWithoutUI
+  
+    scan(
+      clean: true,
+      scheme: "TestFilmesMock", 
+      only_testing: "TestFilmesMockUITests",
+      device: 'iPhone 8 Plus'
+    )
+
+    stopCharles
+  end
 end
