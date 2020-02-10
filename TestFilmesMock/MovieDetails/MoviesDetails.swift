@@ -13,15 +13,16 @@ struct MovieDetails: View {
     
     init(movieId: Int) {
         self.viewModel = MovieDetailsViewModel(movieId: movieId)
-        
-        viewModel.didUpdate = {
-            PullToRefreshView.endRefreshing()
-        }
     }
     
     var body: some View {
         contentView
             .modifier(PullToRefreshModifier(onRefresh: { self.viewModel.loadContent() }))
+            .onPreferenceChange(RefreshViewPrefKey.self, perform: { pullToRefresh in
+                self.viewModel.didUpdate = {
+                    pullToRefresh?.endRefreshing()
+                }
+            })
             .navigationBarTitle(viewModel.movie?.name ?? "")
             .onAppear(perform: self.viewModel.loadContent)
     }

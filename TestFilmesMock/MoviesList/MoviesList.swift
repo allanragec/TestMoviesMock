@@ -17,16 +17,15 @@ struct Movie: Codable {
 struct MoviesList: View {
     @ObservedObject var viewModel = MoviesListViewModel()
     
-    init() {
-        viewModel.didUpdate = {
-            PullToRefreshView.endRefreshing()
-        }
-    }
-    
     var body: some View {
             NavigationView {
                 self.contentView
                     .modifier(PullToRefreshModifier(onRefresh: { self.viewModel.loadContent() }))
+                    .onPreferenceChange(RefreshViewPrefKey.self, perform: { pullToRefresh in
+                        self.viewModel.didUpdate = {
+                            pullToRefresh?.endRefreshing()
+                        }
+                    })
                     .navigationBarTitle("Movies")
                     .onAppear(perform: self.viewModel.loadContent)
             }

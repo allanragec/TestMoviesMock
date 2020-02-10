@@ -24,8 +24,6 @@ struct PullToRefreshModifier: ViewModifier {
 }
 
 struct PullToRefreshView : UIViewRepresentable {
-    private static var current: UIRefreshControl?
-    
     var width : CGFloat
     var height : CGFloat
     let listView: AnyView
@@ -35,17 +33,23 @@ struct PullToRefreshView : UIViewRepresentable {
         Coordinator()
     }
     
-    static func endRefreshing() { current?.endRefreshing() }
     
     func makeUIView(context: Context) -> UIScrollView {
         let control = UIScrollView()
         control.refreshControl = UIRefreshControl()
-        PullToRefreshView.current = control.refreshControl
         control
             .refreshControl?
             .addTarget(context.coordinator,
                        action: #selector(Coordinator.handleRefreshControl), for: .valueChanged)
-        let childView = UIHostingController(rootView: listView)
+        
+        let childView = UIHostingController(
+            rootView: listView
+                        .preference(
+                            key: RefreshViewPrefKey.self,
+                            value: control.refreshControl
+                        )
+        )
+        
         childView.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
         
         control.addSubview(childView.view)
@@ -53,7 +57,6 @@ struct PullToRefreshView : UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UIScrollView, context: Context) {
-        PullToRefreshView.current = uiView.refreshControl
         context.coordinator.onRefresh = {
             self.onRefresh()
         }
@@ -65,5 +68,15 @@ struct PullToRefreshView : UIViewRepresentable {
         @objc func handleRefreshControl(sender: UIRefreshControl) {
             self.onRefresh()
         }
+    }
+}
+
+struct RefreshViewPrefKey: PreferenceKey {
+    typealias Value = UIRefreshControl?
+    
+    static var defaultValue: UIRefreshControl? = nil
+    
+    static func reduce(value: inout UIRefreshControl?, nextValue: () -> UIRefreshControl?) {
+        value = nextValue()
     }
 }
